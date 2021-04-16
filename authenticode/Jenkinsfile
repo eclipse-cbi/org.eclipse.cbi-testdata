@@ -1,3 +1,5 @@
+@Library('common-shared') _
+
 pipeline {
     agent any
     tools {
@@ -11,7 +13,7 @@ pipeline {
     }
 
     parameters { 
-      string(name: 'SERVICE_URL', defaultValue: 'http://build.eclipse.org:31338/winsign.php', description: 'The signing service URL') 
+      string(name: 'SERVICE_URL', defaultValue: 'http://build.eclipse.org:31338/winsign.php', description: 'The signing service URL, e.g. https://cbi.eclipse.org/authenticode/sign or http://build.eclipse.org:31338/winsign.php') 
     }
 
     environment {
@@ -55,7 +57,8 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts 'authenticode/target/*'
+            archiveArtifacts 'authenticode/target/**/*'
+            sendNotifications currentBuild
         }
     }
 }
