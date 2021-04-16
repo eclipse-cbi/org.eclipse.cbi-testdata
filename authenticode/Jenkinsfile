@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    tools {
+        maven 'apache-maven-latest'
+        jdk 'adoptopenjdk-hotspot-jdk8-latest'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+    }
+
+    parameters { 
+      string(name: 'SERVICE_URL', defaultValue: 'http://build.eclipse.org:31338/winsign.php', description: 'The signing service URL') 
+    }
+
+    environment {
+      POM='authenticode/pom.xml'
+      EXE='authenticode/src/test/resources/products/eclipse.exe'
+    }
+
+    stages {
+        stage('Build sample project') {
+            steps {
+                sh '''
+                    mvn verify -f "${POM}"
+                '''
+            }
+        }
+        stage('Sign with maven') {
+            steps {
+                sh '''
+                    cp -Rf "$(dirname "${EXE}")" "$(dirname "${POM}")/target/"
+                    mvn verify -P sign -Dcbi.winsigner.signerUrl="${SERVICE_URL}" -f "${POM}"
+                    tail -c100 "$(dirname "${POM}")/target/products/$(basename "${EXE}")"
+                '''
+            }
+        }
+        stage('Sign with curl') {
+            steps {
+                sh '''
+                    SIGNED_EXE="$(dirname "${POM}")/target/products/signed-$(basename "${EXE}")"
+                    if ! curl -sSLf -o "${SIGNED_EXE}" -F file=@"${EXE}" "${SERVICE_URL}"; then
+                        echo "Signing has failed:"
+                        tail -n100 "${SIGNED_EXE}"
+                        exit 1
+                    else
+                        echo "Signing success!"
+                        tail -c100 "${SIGNED_EXE}"
+                    fi
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts 'authenticode/target/*'
+        }
+    }
+}
