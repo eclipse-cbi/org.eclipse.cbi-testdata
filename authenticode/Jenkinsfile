@@ -23,6 +23,7 @@ pipeline {
 	environment {
 		POM='authenticode/pom.xml'
 		EXE='authenticode/src/test/resources/products/eclipse.exe'
+		MSI='authenticode/src/main/resources/test-j16oj9.msi'
 	}
 
 	stages {
@@ -53,6 +54,21 @@ pipeline {
 					else
 						echo "Signing success!"
 						tail -c100 "${SIGNED_EXE}"
+					fi
+				'''
+			}
+		}
+		stage('Sign .msi with curl') {
+			steps {
+				sh '''
+					SIGNED_MSI="$(dirname "${POM}")/target/signed-$(basename "${MSI}")"
+					if ! curl -sSLf -o "${SIGNED_MSI}" -F file=@"${MSI}" "${SERVICE_URL}"; then
+						echo "Signing has failed:"
+						tail -n100 "${SIGNED_MSI}"
+						exit 1
+					else
+						echo "Signing success!"
+						tail -c100 "${SIGNED_MSI}"
 					fi
 				'''
 			}
