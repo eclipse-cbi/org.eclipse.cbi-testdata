@@ -79,6 +79,7 @@ pipeline {
 			always {
 				archiveArtifacts 'authenticode/target/**/*'
 				sendNotifications currentBuild
+				cleanWs()
 			}
 	}
 }
