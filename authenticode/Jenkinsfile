@@ -17,7 +17,7 @@ pipeline {
 	}
 
 	parameters { 
-		string(name: 'SERVICE_URL', defaultValue: 'http://cbi-staging.eclipse.org/authenticode/sign', description: 'The signing service URL, e.g. https://cbi.eclipse.org/authenticode/sign or http://build.eclipse.org:31338/winsign.php') 
+		string(name: 'SERVICE_URL', defaultValue: 'https://cbi-staging.eclipse.org/authenticode/sign', description: 'The signing service URL, e.g. https://cbi.eclipse.org/authenticode/sign or http://build.eclipse.org:31338/winsign.php') 
 	}
 
 	environment {
